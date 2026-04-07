@@ -2,9 +2,10 @@
 
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { ArrowRight, Play, ChevronDown } from 'lucide-react';
-import type { Variants } from 'framer-motion';
+import { useLang } from '@/lib/LangContext';
+import { heroT } from '@/lib/i18n';
 
 function HeroCanvas() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -19,19 +20,14 @@ function HeroCanvas() {
         let width = (canvas.width = window.innerWidth);
         let height = (canvas.height = window.innerHeight);
 
-        const onResize = () => {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-        };
+        const onResize = () => { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; };
         window.addEventListener('resize', onResize);
 
         const colors = ['#6366f1', '#a855f7', '#22d3ee', '#818cf8'];
         type Particle = { x: number; y: number; vx: number; vy: number; radius: number; alpha: number; color: string };
         const particles: Particle[] = Array.from({ length: 80 }, () => ({
-            x: Math.random() * width,
-            y: Math.random() * height,
-            vx: (Math.random() - 0.5) * 0.4,
-            vy: (Math.random() - 0.5) * 0.4,
+            x: Math.random() * width, y: Math.random() * height,
+            vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4,
             radius: Math.random() * 1.5 + 0.5,
             alpha: Math.random() * 0.5 + 0.1,
             color: colors[Math.floor(Math.random() * colors.length)],
@@ -92,6 +88,9 @@ const itemVariants: Variants = {
 };
 
 export default function Hero() {
+    const { lang } = useLang();
+    const t = heroT[lang];
+
     return (
         <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-[#0B0F19]">
             <HeroCanvas />
@@ -104,30 +103,24 @@ export default function Hero() {
                     <motion.div variants={itemVariants}>
                         <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold bg-indigo-500/10 border border-indigo-500/25 text-indigo-300 tracking-wide uppercase">
                             <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                            Open Data Platform for Embodied AI
+                            {t.badge}
                         </span>
                     </motion.div>
 
                     <motion.h1 variants={itemVariants} className="text-5xl md:text-7xl lg:text-8xl font-black leading-[1.05] tracking-tight">
-                        <span className="text-white">The Data</span>
+                        <span className="text-white">{t.title1}</span>
                         <br />
-                        <span className="gradient-text">Infrastructure</span>
+                        <span className="gradient-text">{t.title2}</span>
                         <br />
-                        <span className="text-white">for Robotics AI</span>
+                        <span className="text-white">{t.title3}</span>
                     </motion.h1>
 
                     <motion.p variants={itemVariants} className="text-lg md:text-xl text-slate-400 max-w-2xl leading-relaxed">
-                        Discover, access, and contribute high-quality datasets for robot learning.
-                        Accelerate embodied AI research with standardized data and open benchmarks.
+                        {t.subtitle}
                     </motion.p>
 
                     <motion.div variants={itemVariants} className="flex flex-wrap items-center justify-center gap-8 py-2">
-                        {[
-                            { value: '6+', label: 'Datasets' },
-                            { value: '4M+', label: 'Trajectories' },
-                            { value: '1.3TB', label: 'Data Volume' },
-                            { value: '200+', label: 'Tasks' },
-                        ].map((stat) => (
+                        {t.stats.map((stat) => (
                             <div key={stat.label} className="flex flex-col items-center">
                                 <span className="text-2xl md:text-3xl font-black gradient-text">{stat.value}</span>
                                 <span className="text-xs text-slate-500 uppercase tracking-widest mt-0.5">{stat.label}</span>
@@ -140,7 +133,7 @@ export default function Hero() {
                             href="/datasets"
                             className="group flex items-center gap-2 px-7 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-xl hover:shadow-indigo-500/30 hover:-translate-y-0.5"
                         >
-                            Explore Datasets
+                            {t.cta1}
                             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </Link>
                         <Link
@@ -148,7 +141,7 @@ export default function Hero() {
                             className="group flex items-center gap-2 px-7 py-3.5 bg-slate-800/60 hover:bg-slate-700/60 border border-slate-700/60 hover:border-slate-600/60 text-slate-200 font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5"
                         >
                             <Play className="w-4 h-4 text-cyan-400" />
-                            View Demo
+                            {t.cta2}
                         </Link>
                     </motion.div>
                 </motion.div>
@@ -160,7 +153,7 @@ export default function Hero() {
                 animate={{ opacity: 1, y: [0, 6, 0] }}
                 transition={{ delay: 1.5, duration: 2, repeat: Infinity }}
             >
-                <span className="text-xs uppercase tracking-widest">Scroll</span>
+                <span className="text-xs uppercase tracking-widest">{t.scroll}</span>
                 <ChevronDown className="w-4 h-4" />
             </motion.div>
         </section>

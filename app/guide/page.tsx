@@ -1,158 +1,107 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { BookOpen, Code2, Terminal, Plug, Clock, ArrowRight } from 'lucide-react';
-import Link from 'next/link';
+import { Terminal, BookOpen, Download, Layers } from 'lucide-react';
+import { useLang } from '@/lib/LangContext';
+import { guideT } from '@/lib/i18n';
 
-const comingSoonFeatures = [
-    {
-        icon: BookOpen,
-        title: 'Getting Started Guide',
-        description: 'Step-by-step tutorial to set up EvoData and access your first dataset.',
-    },
-    {
-        icon: Code2,
-        title: 'API Reference',
-        description: 'Complete API documentation for programmatic dataset access and management.',
-    },
-    {
-        icon: Terminal,
-        title: 'CLI Tools',
-        description: 'Command-line interface for dataset download, upload, and management.',
-    },
-    {
-        icon: Plug,
-        title: 'Framework Integrations',
-        description: 'Ready-to-use integrations for LeRobot, TensorFlow Datasets, and PyTorch.',
-    },
-];
+const featureIcons = [Terminal, BookOpen, Download, Layers];
+
+const codeSnippet = `import evo_data as ed
+
+# Load a dataset by ID
+dataset = ed.load("franka-pick-place-v1")
+
+# Stream trajectories
+for traj in dataset.iter_trajectories():
+    obs   = traj["observation"]   # dict of sensor data
+    act   = traj["action"]        # joint commands
+    reward = traj["reward"]
+    print(obs.keys(), act.shape)`;
 
 export default function GuidePage() {
+    const { lang } = useLang();
+    const t = guideT[lang];
+
     return (
-        <div className="pt-16 bg-[#0B0F19] min-h-screen flex flex-col">
-            <section className="flex-1 relative px-6 md:px-12 lg:px-20 py-20 overflow-hidden">
-                <div className="absolute inset-0 grid-bg opacity-30 pointer-events-none" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-indigo-600/8 rounded-full blur-3xl pointer-events-none" />
-
-                <div className="max-w-4xl mx-auto relative z-10">
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.7 }}
-                        className="text-center mb-16"
-                    >
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 mb-6 mx-auto">
-                            <BookOpen className="w-8 h-8 text-indigo-400" />
-                        </div>
+        <div className="pt-16 bg-[#0B0F19] min-h-screen">
+            {/* Header */}
+            <section className="relative px-6 md:px-12 lg:px-20 py-20 md:py-28 overflow-hidden">
+                <div className="absolute inset-0 grid-bg opacity-20 pointer-events-none" />
+                <div className="absolute top-1/3 left-1/4 w-[400px] h-[180px] bg-indigo-600/8 rounded-full blur-3xl pointer-events-none" />
+                <div className="max-w-4xl mx-auto relative z-10 text-center">
+                    <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
                         <span className="inline-block px-3 py-1 mb-5 text-xs font-semibold uppercase tracking-widest text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 rounded-full">
-                            Documentation
+                            {t.badge}
                         </span>
-                        <h1 className="text-4xl md:text-6xl font-black text-white mb-5">
-                            Guide & <span className="gradient-text">Documentation</span>
-                        </h1>
-                        <div className="flex items-center justify-center gap-2 text-amber-400 mb-4">
-                            <Clock className="w-4 h-4" />
-                            <span className="text-sm font-medium">Coming Soon</span>
-                        </div>
-                        <p className="text-lg text-slate-400 max-w-xl mx-auto leading-relaxed">
-                            Comprehensive documentation and guides for the EvoData platform are currently in progress.
-                            They will be available alongside Phase 2 of the platform launch.
-                        </p>
+                        <h1 className="text-4xl md:text-5xl font-black text-white mb-4">{t.title}</h1>
+                        <p className="text-slate-400 text-lg max-w-2xl mx-auto leading-relaxed">{t.desc}</p>
                     </motion.div>
+                </div>
+            </section>
 
-                    {/* Features preview */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-16">
-                        {comingSoonFeatures.map((f, i) => (
-                            <motion.div
-                                key={f.title}
-                                initial={{ opacity: 0, y: 30 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.5, delay: 0.1 + i * 0.1 }}
-                                className="p-5 rounded-2xl bg-slate-900/40 border border-slate-800/50 flex gap-4"
-                            >
-                                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center flex-shrink-0">
-                                    <f.icon className="w-5 h-5 text-indigo-400" />
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-slate-200 mb-1 text-sm">{f.title}</h3>
-                                    <p className="text-xs text-slate-500 leading-relaxed">{f.description}</p>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
+            {/* Quick Start */}
+            <section className="px-6 md:px-12 lg:px-20 py-16 border-t border-slate-800/40">
+                <div className="max-w-4xl mx-auto">
+                    <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+                        <h2 className="text-2xl font-black text-white mb-6">{t.quickStartTitle}</h2>
 
-                    {/* Sneak peek code block */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.4 }}
-                        className="rounded-2xl bg-slate-900/60 border border-slate-700/50 overflow-hidden mb-12"
-                    >
-                        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-800/60 bg-slate-900/80">
-                            <div className="flex items-center gap-2">
-                                <div className="flex gap-1.5">
-                                    <div className="w-3 h-3 rounded-full bg-red-500/50" />
-                                    <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
-                                    <div className="w-3 h-3 rounded-full bg-green-500/50" />
-                                </div>
-                                <span className="text-xs text-slate-600 font-mono ml-2">example_usage.py</span>
+                        <div className="mb-6">
+                            <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">{t.installLabel}</p>
+                            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-900/70 border border-slate-700/40 font-mono text-sm">
+                                <Terminal className="w-4 h-4 text-slate-500 shrink-0" />
+                                <code className="text-emerald-400">pip install evo-data</code>
                             </div>
-                            <span className="text-xs text-slate-600">Sneak Peek</span>
                         </div>
-                        <pre className="p-6 text-sm font-mono overflow-x-auto text-slate-400 leading-relaxed">
-                            <span className="text-slate-600"># Coming in Phase 2 — API preview{'\n'}</span>
-                            <span className="text-violet-400">import</span>
-                            <span className="text-slate-300"> evodata{'\n\n'}</span>
-                            <span className="text-slate-600"># Load a dataset directly{'\n'}</span>
-                            <span className="text-slate-300">dataset = evodata.</span>
-                            <span className="text-cyan-400">load</span>
-                            <span className="text-slate-300">(</span>
-                            <span className="text-emerald-400">&quot;robomanip-1m&quot;</span>
-                            <span className="text-slate-300">){'\n\n'}</span>
-                            <span className="text-slate-600"># Stream trajectories{'\n'}</span>
-                            <span className="text-violet-400">for</span>
-                            <span className="text-slate-300"> episode </span>
-                            <span className="text-violet-400">in</span>
-                            <span className="text-slate-300"> dataset.</span>
-                            <span className="text-cyan-400">stream</span>
-                            <span className="text-slate-300">(batch_size=</span>
-                            <span className="text-amber-400">32</span>
-                            <span className="text-slate-300">):{'\n'}</span>
-                            <span className="text-slate-300">    train(episode){'\n\n'}</span>
-                            <span className="text-slate-600"># Or use with PyTorch DataLoader{'\n'}</span>
-                            <span className="text-slate-300">loader = dataset.</span>
-                            <span className="text-cyan-400">to_dataloader</span>
-                            <span className="text-slate-300">(framework=</span>
-                            <span className="text-emerald-400">&quot;pytorch&quot;</span>
-                            <span className="text-slate-300">)</span>
-                        </pre>
-                    </motion.div>
 
-                    {/* CTA */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.5 }}
-                        className="text-center"
-                    >
-                        <p className="text-slate-500 text-sm mb-5">
-                            Want to stay updated? Reach out to us or watch our GitHub repository.
-                        </p>
-                        <div className="flex flex-wrap items-center justify-center gap-3">
-                            <a
-                                href="mailto:contact@evo-data.io"
-                                className="group inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition-all duration-200 text-sm hover:shadow-lg hover:shadow-indigo-500/25"
-                            >
-                                Contact Us
-                                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                            </a>
-                            <Link
-                                href="/datasets"
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-slate-800/60 hover:bg-slate-700/60 border border-slate-700/50 text-slate-300 font-semibold rounded-xl transition-all duration-200 text-sm"
-                            >
-                                Browse Datasets
-                            </Link>
+                        <div>
+                            <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">{t.exampleLabel}</p>
+                            <div className="rounded-2xl overflow-hidden border border-slate-700/40">
+                                <div className="px-4 py-2 bg-slate-800/60 border-b border-slate-700/40 flex items-center gap-2">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-rose-500/60" />
+                                    <div className="w-2.5 h-2.5 rounded-full bg-amber-500/60" />
+                                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/60" />
+                                    <span className="ml-2 text-xs text-slate-500 font-mono">example.py</span>
+                                </div>
+                                <pre className="p-5 bg-slate-900/80 text-sm font-mono text-slate-300 overflow-x-auto leading-relaxed">
+                                    <code>{codeSnippet}</code>
+                                </pre>
+                            </div>
                         </div>
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* Features */}
+            <section className="px-6 md:px-12 lg:px-20 py-16 border-t border-slate-800/40">
+                <div className="max-w-4xl mx-auto">
+                    <motion.h2 initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.5 }} className="text-2xl font-black text-white mb-8">
+                        {t.featuresTitle}
+                    </motion.h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        {t.features.map((f, i) => {
+                            const Icon = featureIcons[i];
+                            return (
+                                <motion.div key={f.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.1 }} className="p-5 rounded-2xl bg-slate-900/50 border border-slate-800/60">
+                                    <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-3">
+                                        <Icon className="w-4 h-4 text-indigo-400" />
+                                    </div>
+                                    <h3 className="font-bold text-slate-100 mb-1.5">{f.title}</h3>
+                                    <p className="text-sm text-slate-500 leading-relaxed">{f.desc}</p>
+                                </motion.div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </section>
+
+            {/* WIP Notice */}
+            <section className="px-6 md:px-12 lg:px-20 py-16 border-t border-slate-800/40">
+                <div className="max-w-4xl mx-auto">
+                    <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }} className="p-8 rounded-2xl bg-indigo-500/5 border border-indigo-500/15 text-center">
+                        <p className="text-3xl mb-4">🚧</p>
+                        <h3 className="text-lg font-bold text-slate-200 mb-2">{t.wipTitle}</h3>
+                        <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">{t.wipDesc}</p>
                     </motion.div>
                 </div>
             </section>

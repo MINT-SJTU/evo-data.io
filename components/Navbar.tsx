@@ -1,23 +1,21 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Database, GitFork, Mail } from 'lucide-react';
+import { Menu, X, Mail, GitFork, Languages } from 'lucide-react';
 import clsx from 'clsx';
-
-const navLinks = [
-    { label: 'Home', href: '/' },
-    { label: 'About', href: '/about' },
-    { label: 'Datasets', href: '/datasets' },
-    { label: 'Guide', href: '/guide' },
-];
+import { useLang } from '@/lib/LangContext';
+import { navT } from '@/lib/i18n';
 
 export default function Navbar() {
     const pathname = usePathname();
     const [scrolled, setScrolled] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
+    const { lang, toggle } = useLang();
+    const t = navT[lang];
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -39,10 +37,14 @@ export default function Navbar() {
         >
             <nav className="max-w-7xl mx-auto px-6 md:px-10 h-16 flex items-center justify-between">
                 {/* Logo */}
-                <Link href="/" className="flex items-center gap-2.5 group">
-                    <div className="relative">
-                        <Database className="w-6 h-6 text-indigo-400 group-hover:text-cyan-400 transition-colors duration-300" />
-                        <div className="absolute inset-0 blur-sm bg-indigo-500/40 group-hover:bg-cyan-500/40 transition-colors duration-300 rounded-full" />
+                <Link href="/" className="flex items-center gap-3 group">
+                    <div className="relative w-8 h-8 flex-shrink-0">
+                        <Image
+                            src="/logo/EvoMind1.png"
+                            alt="EvoData Logo"
+                            fill
+                            className="object-contain"
+                        />
                     </div>
                     <span className="font-bold text-lg tracking-tight">
                         <span className="gradient-text">Evo</span>
@@ -52,7 +54,7 @@ export default function Navbar() {
 
                 {/* Desktop nav */}
                 <ul className="hidden md:flex items-center gap-1">
-                    {navLinks.map((link) => {
+                    {t.links.map((link) => {
                         const isActive = pathname === link.href;
                         return (
                             <li key={link.href}>
@@ -60,9 +62,7 @@ export default function Navbar() {
                                     href={link.href}
                                     className={clsx(
                                         'relative px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200',
-                                        isActive
-                                            ? 'text-indigo-400'
-                                            : 'text-slate-400 hover:text-slate-200'
+                                        isActive ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-200'
                                     )}
                                 >
                                     {isActive && (
@@ -79,7 +79,16 @@ export default function Navbar() {
                 </ul>
 
                 {/* Right side actions */}
-                <div className="hidden md:flex items-center gap-3">
+                <div className="hidden md:flex items-center gap-2">
+                    {/* Language toggle */}
+                    <button
+                        onClick={toggle}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-700/50 bg-slate-800/40 hover:bg-slate-700/50 hover:border-indigo-500/40 text-slate-400 hover:text-slate-200 transition-all duration-200"
+                        title="Switch language"
+                    >
+                        <Languages className="w-3.5 h-3.5" />
+                        {lang === 'en' ? '中文' : 'EN'}
+                    </button>
                     <a
                         href="mailto:contact@evo-data.io"
                         className="text-slate-400 hover:text-cyan-400 transition-colors p-2 rounded-lg hover:bg-slate-800/50"
@@ -100,17 +109,26 @@ export default function Navbar() {
                         href="/datasets"
                         className="ml-1 px-4 py-2 text-sm font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition-all duration-200 hover:shadow-lg hover:shadow-indigo-500/30"
                     >
-                        Explore Data
+                        {t.cta}
                     </Link>
                 </div>
 
-                {/* Mobile menu toggle */}
-                <button
-                    className="md:hidden p-2 text-slate-400 hover:text-slate-200 transition-colors"
-                    onClick={() => setMenuOpen(!menuOpen)}
-                >
-                    {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                </button>
+                {/* Mobile: lang toggle + menu button */}
+                <div className="md:hidden flex items-center gap-2">
+                    <button
+                        onClick={toggle}
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-slate-700/50 bg-slate-800/40 text-slate-400 hover:text-slate-200 transition-all"
+                    >
+                        <Languages className="w-3.5 h-3.5" />
+                        {lang === 'en' ? '中文' : 'EN'}
+                    </button>
+                    <button
+                        className="p-2 text-slate-400 hover:text-slate-200 transition-colors"
+                        onClick={() => setMenuOpen(!menuOpen)}
+                    >
+                        {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                    </button>
+                </div>
             </nav>
 
             {/* Mobile menu */}
@@ -124,7 +142,7 @@ export default function Navbar() {
                         className="md:hidden bg-[#0B0F19]/95 backdrop-blur-xl border-b border-slate-800/60"
                     >
                         <div className="px-6 py-4 flex flex-col gap-1">
-                            {navLinks.map((link) => (
+                            {t.links.map((link) => (
                                 <Link
                                     key={link.href}
                                     href={link.href}

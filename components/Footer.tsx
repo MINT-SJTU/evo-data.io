@@ -1,61 +1,43 @@
 'use client';
 
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { Database, Mail, GitFork, ExternalLink, Heart } from 'lucide-react';
-
-const footerLinks = [
-    {
-        title: 'Platform',
-        links: [
-            { label: 'Home', href: '/' },
-            { label: 'Datasets', href: '/datasets' },
-            { label: 'About', href: '/about' },
-            { label: 'Guide', href: '/guide' },
-        ],
-    },
-    {
-        title: 'Resources',
-        links: [
-            { label: 'Documentation', href: '/guide' },
-            { label: 'Data Format', href: '/guide' },
-            { label: 'API Reference', href: '/guide' },
-            { label: 'Changelog', href: '/about' },
-        ],
-    },
-    {
-        title: 'Community',
-        links: [
-            { label: 'GitHub', href: 'https://github.com/MINT-SJTU', external: true as const },
-            { label: 'Contact Us', href: 'mailto:contact@evo-data.io', external: true as const },
-            { label: 'MINT Lab', href: 'https://github.com/MINT-SJTU', external: true as const },
-        ],
-    },
-];
+import Image from 'next/image';
+import { Mail, GitFork, ExternalLink, Heart } from 'lucide-react';
+import { useLang } from '@/lib/LangContext';
+import { footerT } from '@/lib/i18n';
 
 export default function Footer() {
+    const { lang } = useLang();
+    const t = footerT[lang];
+
     return (
         <footer className="border-t border-slate-800/60 bg-[#0A0A0F]">
-            {/* Main footer */}
             <div className="max-w-7xl mx-auto px-6 md:px-10 py-16">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
                     {/* Brand */}
                     <div className="lg:col-span-2">
-                        <Link href="/" className="flex items-center gap-2.5 mb-4 group w-fit">
-                            <div className="relative">
-                                <Database className="w-6 h-6 text-indigo-400" />
-                                <div className="absolute inset-0 blur-sm bg-indigo-500/40 rounded-full" />
+                        <Link href="/" className="flex items-center gap-3 mb-4 w-fit group">
+                            <div className="relative w-8 h-8 flex-shrink-0">
+                                <Image src="/logo/EvoMind1.png" alt="EvoData" fill className="object-contain" />
                             </div>
                             <span className="font-bold text-lg tracking-tight">
                                 <span className="gradient-text">Evo</span>
                                 <span className="text-slate-200">Data</span>
                             </span>
                         </Link>
-                        <p className="text-slate-500 text-sm leading-relaxed max-w-xs">
-                            A next-generation open data platform for robotics and embodied AI research.
-                            Empowering the community with high-quality, standardized datasets.
+
+                        {/* SJTU logo */}
+                        <div className="flex items-center gap-2 mb-4">
+                            <div className="relative w-5 h-5 flex-shrink-0 opacity-60">
+                                <Image src="/logo/SJTU.png" alt="SJTU" fill className="object-contain" />
+                            </div>
+                            <span className="text-xs text-slate-600">MINT Lab · Shanghai Jiao Tong University</span>
+                        </div>
+
+                        <p className="text-slate-500 text-sm leading-relaxed max-w-xs mb-6">
+                            {t.desc}
                         </p>
-                        <div className="flex items-center gap-3 mt-6">
+                        <div className="flex items-center gap-3">
                             <a
                                 href="https://github.com/MINT-SJTU"
                                 target="_blank"
@@ -75,8 +57,8 @@ export default function Footer() {
                         </div>
                     </div>
 
-                    {/* Links */}
-                    {footerLinks.map((group) => (
+                    {/* Link groups */}
+                    {t.groups.map((group) => (
                         <div key={group.title}>
                             <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">
                                 {group.title}
@@ -97,10 +79,7 @@ export default function Footer() {
                                                 )}
                                             </a>
                                         ) : (
-                                            <Link
-                                                href={link.href}
-                                                className="text-sm text-slate-500 hover:text-slate-300 transition-colors duration-200"
-                                            >
+                                            <Link href={link.href} className="text-sm text-slate-500 hover:text-slate-300 transition-colors duration-200">
                                                 {link.label}
                                             </Link>
                                         )}
@@ -115,12 +94,12 @@ export default function Footer() {
             {/* Bottom bar */}
             <div className="border-t border-slate-800/40 max-w-7xl mx-auto px-6 md:px-10 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <p className="text-slate-600 text-xs">
-                    © {new Date().getFullYear()} EvoData · MINT Lab, SJTU. All rights reserved.
+                    © {new Date().getFullYear()} {t.copyright}
                 </p>
                 <div className="flex items-center gap-1.5 text-slate-600 text-xs">
-                    <span>Built with</span>
+                    <span>{t.builtWith}</span>
                     <Heart className="w-3 h-3 text-rose-500 fill-rose-500" />
-                    <span>for Robotics AI</span>
+                    <span>{t.forRobotics}</span>
                 </div>
             </div>
         </footer>

@@ -2,15 +2,21 @@ import type { Metadata } from 'next';
 import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { LangProvider } from '@/lib/LangContext';
 
 export const metadata: Metadata = {
-    title: 'EvoData — Robotics Data Platform',
+    title: 'EvoData — Real-Robot RL Data Platform',
     description:
-        'A next-generation data platform for robotics and embodied AI. Explore, download, and contribute high-quality datasets for robot learning.',
-    keywords: ['robotics', 'embodied AI', 'dataset', 'robot learning', 'reinforcement learning'],
+        'An open data platform for real-robot reinforcement learning. Discover, access, and contribute high-quality real-robot trajectory datasets.',
+    keywords: ['robotics', 'reinforcement learning', 'real robot', 'sim-to-real', 'dataset', 'robot learning', 'embodied AI'],
+    icons: {
+        icon: '/logo/EvoMind0.png',
+        shortcut: '/logo/EvoMind0.png',
+        apple: '/logo/EvoMind0.png',
+    },
     openGraph: {
-        title: 'EvoData — Robotics Data Platform',
-        description: 'A next-generation data platform for robotics and embodied AI.',
+        title: 'EvoData — Real-Robot RL Data Platform',
+        description: 'An open data platform for real-robot reinforcement learning.',
         type: 'website',
     },
 };
@@ -23,9 +29,11 @@ export default function RootLayout({
     return (
         <html lang="en" className="scroll-smooth">
             <body className="bg-[#0B0F19] text-slate-200 antialiased">
-                <Navbar />
-                <main>{children}</main>
-                <Footer />
+                <LangProvider>
+                    <Navbar />
+                    <main>{children}</main>
+                    <Footer />
+                </LangProvider>
             </body>
         </html>
     );
