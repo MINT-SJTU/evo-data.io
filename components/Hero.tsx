@@ -143,7 +143,7 @@ export default function Hero() {
                             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </Link>
                         <Link
-                            href="/about"
+                            href="/#demo"
                             className="group flex items-center gap-2 px-7 py-3.5 bg-slate-800/60 hover:bg-slate-700/60 border border-slate-700/60 hover:border-slate-600/60 text-slate-200 font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5"
                         >
                             <Play className="w-4 h-4 text-cyan-400" />

@@ -107,7 +107,7 @@ export default function HomePage() {
             </section>
 
             {/* Vision Section */}
-            <section className="relative px-6 md:px-12 lg:px-20 py-24 md:py-32 bg-[#0B0F19] overflow-hidden">
+            <section id="demo" className="relative px-6 md:px-12 lg:px-20 py-24 md:py-32 bg-[#0B0F19] overflow-hidden">
                 <div className="max-w-6xl mx-auto">
                     {/* GIF Demo Showcase */}
                     <motion.div
