@@ -17,9 +17,10 @@ export default function Footer() {
                     {/* Brand */}
                     <div className="lg:col-span-2">
                         <Link href="/" className="flex items-center gap-3 mb-4 w-fit group">
-                            <div className="relative w-8 h-8 flex-shrink-0">
+                            <div className="relative w-24 h-12 flex-shrink-0">
                                 <Image src="/logo/EvoMind1.png" alt="EvoData" fill className="object-contain" />
                             </div>
+                            {/* <span className="text-xs text-slate-600">EvoMind Tech</span> */}
                             <span className="font-bold text-lg tracking-tight">
                                 <span className="gradient-text">Evo</span>
                                 <span className="text-slate-200">Data</span>
@@ -28,7 +29,7 @@ export default function Footer() {
 
                         {/* SJTU logo */}
                         <div className="flex items-center gap-2 mb-4">
-                            <div className="relative w-5 h-5 flex-shrink-0 opacity-60">
+                            <div className="relative w-8 h-8 flex-shrink-0 opacity-60">
                                 <Image src="/logo/SJTU.png" alt="SJTU" fill className="object-contain" />
                             </div>
                             <span className="text-xs text-slate-600">MINT Lab · Shanghai Jiao Tong University</span>

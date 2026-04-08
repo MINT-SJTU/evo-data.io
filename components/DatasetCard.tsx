@@ -7,14 +7,15 @@ import { useLang } from '@/lib/LangContext';
 import { datasetCardT } from '@/lib/i18n';
 
 const tagColorMap: Record<string, string> = {
-    manipulation: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
-    navigation:   'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    locomotion:   'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    dexterous:    'bg-purple-500/10 text-purple-400 border-purple-500/20',
-    sim2real:     'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
-    humanoid:     'bg-rose-500/10 text-rose-400 border-rose-500/20',
-    multimodal:   'bg-orange-500/10 text-orange-400 border-orange-500/20',
-    real:         'bg-teal-500/10 text-teal-400 border-teal-500/20',
+    Manipulation: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+    Navigation: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    Locomotion: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    Dexterous: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+    Humanoid: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
+    Assembly: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+    Mobile: 'bg-teal-500/10 text-teal-400 border-teal-500/20',
+    RL: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+    'Real-World': 'bg-sky-500/10 text-sky-400 border-sky-500/20',
 };
 
 const coverGradients = [

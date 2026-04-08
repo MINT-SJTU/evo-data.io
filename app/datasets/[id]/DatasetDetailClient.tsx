@@ -25,13 +25,13 @@ type Props = { dataset: Dataset };
 
 const tagColorMap: Record<string, string> = {
     manipulation: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
-    navigation:   'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    locomotion:   'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    dexterous:    'bg-purple-500/10 text-purple-400 border-purple-500/20',
-    sim2real:     'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
-    humanoid:     'bg-rose-500/10 text-rose-400 border-rose-500/20',
-    multimodal:   'bg-orange-500/10 text-orange-400 border-orange-500/20',
-    real:         'bg-teal-500/10 text-teal-400 border-teal-500/20',
+    navigation: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    locomotion: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    dexterous: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+    sim2real: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+    humanoid: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
+    multimodal: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+    real: 'bg-teal-500/10 text-teal-400 border-teal-500/20',
 };
 
 export default function DatasetDetailClient({ dataset }: Props) {
@@ -43,12 +43,12 @@ export default function DatasetDetailClient({ dataset }: Props) {
         .slice(0, 3);
 
     const infoRows = [
-        { label: t.labels.Size,          value: dataset.size },
-        { label: t.labels.Tasks,         value: dataset.tasks.toString() },
-        { label: t.labels.Trajectories,  value: dataset.trajectories },
-        { label: t.labels.Format,        value: dataset.format },
-        { label: t.labels.Robot,         value: dataset.robot ?? 'Various' },
-        { label: t.labels.License,       value: dataset.license ?? 'Apache-2.0' },
+        { label: t.labels.Size, value: dataset.size },
+        { label: t.labels.Tasks, value: dataset.tasks.toString() },
+        { label: t.labels.Trajectories, value: dataset.trajectories },
+        { label: t.labels.Format, value: dataset.format },
+        { label: t.labels.Robot, value: dataset.robot ?? 'Various' },
+        { label: t.labels.License, value: dataset.license ?? 'Apache-2.0' },
     ];
 
     return (

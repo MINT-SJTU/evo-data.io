@@ -37,11 +37,19 @@ export default function Navbar() {
         >
             <nav className="max-w-7xl mx-auto px-6 md:px-10 h-16 flex items-center justify-between">
                 {/* Logo */}
-                <Link href="/" className="flex items-center gap-3 group">
-                    <div className="relative w-8 h-8 flex-shrink-0">
+                <Link href="/" className="flex items-center gap-2.5 group">
+                    <div className="relative w-20 h-10 flex-shrink-0">
                         <Image
                             src="/logo/EvoMind1.png"
-                            alt="EvoData Logo"
+                            alt="EvoMind Logo"
+                            fill
+                            className="object-contain"
+                        />
+                    </div>
+                    <div className="relative w-8 h-8 flex-shrink-0 opacity-70">
+                        <Image
+                            src="/logo/SJTU.png"
+                            alt="SJTU Logo"
                             fill
                             className="object-contain"
                         />

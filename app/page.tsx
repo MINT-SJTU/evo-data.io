@@ -4,8 +4,9 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
     Database, Zap, Shield, BarChart3, Globe, Cpu,
-    ArrowRight, Play, ChevronRight,
+    ArrowRight, ChevronRight,
 } from 'lucide-react';
+import Image from 'next/image';
 import Hero from '@/components/Hero';
 import FeatureCard from '@/components/FeatureCard';
 import DatasetCard from '@/components/DatasetCard';
@@ -108,6 +109,39 @@ export default function HomePage() {
             {/* Vision Section */}
             <section className="relative px-6 md:px-12 lg:px-20 py-24 md:py-32 bg-[#0B0F19] overflow-hidden">
                 <div className="max-w-6xl mx-auto">
+                    {/* GIF Demo Showcase */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6 }}
+                        className="mb-20"
+                    >
+                        <div className="text-center mb-8">
+                            <span className="inline-block px-3 py-1 mb-4 text-xs font-semibold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                                {t.demoBadge}
+                            </span>
+                            <h2 className="text-3xl md:text-4xl font-black text-white mb-3">{t.demoTitle}</h2>
+                            <p className="text-slate-500 max-w-xl mx-auto text-sm">{t.demoDesc}</p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl mx-auto">
+                            <div className="rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-900/50">
+                                <div className="px-4 py-2 bg-slate-800/60 border-b border-slate-700/40 flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                                    <span className="text-xs text-slate-400 font-mono">{t.demoSuccessLabel}</span>
+                                </div>
+                                <Image src="/gif/value_success_small.gif" alt="Success demo" width={960} height={240} unoptimized className="w-full h-auto" />
+                            </div>
+                            <div className="rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-900/50">
+                                <div className="px-4 py-2 bg-slate-800/60 border-b border-slate-700/40 flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-rose-400" />
+                                    <span className="text-xs text-slate-400 font-mono">{t.demoFailureLabel}</span>
+                                </div>
+                                <Image src="/gif/value_failure_small.gif" alt="Failure demo" width={960} height={240} unoptimized className="w-full h-auto" />
+                            </div>
+                        </div>
+                    </motion.div>
+
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                         <motion.div
                             initial={{ opacity: 0, x: -40 }}
@@ -150,23 +184,23 @@ export default function HomePage() {
                             transition={{ duration: 0.7 }}
                             className="relative"
                         >
-                            <div className="relative rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-900/50 aspect-video flex items-center justify-center group cursor-pointer">
-                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/10 via-purple-600/5 to-cyan-600/10" />
-                                <div className="relative flex items-center justify-center">
-                                    <div className="absolute w-32 h-32 rounded-full border border-indigo-500/20 animate-ping" style={{ animationDuration: '3s' }} />
-                                    <div className="absolute w-24 h-24 rounded-full border border-indigo-500/20 animate-ping" style={{ animationDuration: '2.5s', animationDelay: '0.5s' }} />
-                                    <div className="w-16 h-16 rounded-full bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform duration-300">
-                                        <Play className="w-7 h-7 text-indigo-400 ml-0.5" />
-                                    </div>
+                            <div className="relative rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-900/80">
+                                <div className="absolute top-3 left-3 right-3 flex items-center gap-1.5 z-10">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-rose-500/60" />
+                                    <div className="w-2.5 h-2.5 rounded-full bg-amber-500/60" />
+                                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/60" />
+                                    <span className="ml-2 text-xs text-slate-500 font-mono">evo-rl demo</span>
                                 </div>
-                                <div className="absolute bottom-4 left-4 right-4">
-                                    <div className="h-1 bg-slate-700/50 rounded-full overflow-hidden">
-                                        <div className="h-full w-1/3 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-full" />
-                                    </div>
-                                </div>
-                                <span className="absolute top-4 left-4 text-xs text-slate-500 font-mono">demo_preview.mp4</span>
+                                <video
+                                    src="/demo.mp4"
+                                    autoPlay
+                                    loop
+                                    muted
+                                    playsInline
+                                    className="w-full rounded-2xl"
+                                    style={{ paddingTop: '1.75rem' }}
+                                />
                             </div>
-                            <p className="text-center text-xs text-slate-600 mt-3">{t.demoPlaceholder}</p>
                         </motion.div>
                     </div>
                 </div>

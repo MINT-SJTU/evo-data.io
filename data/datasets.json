@@ -1,109 +1,74 @@
 [
     {
         "id": "dataset-001",
-        "name": "RoboManip-1M",
-        "description": "A large-scale robotic manipulation dataset containing over 1 million trajectories across 50+ tasks, collected from both real robots and high-fidelity simulation.",
-        "size": "340 GB",
+        "name": "EvoRL-Franka-Pick",
+        "description": "Collected via Evo-RL on Franka Emika Panda. Covers pick-and-place across 50+ object categories with varied lighting and table configurations.",
+        "size": "128 GB",
         "tasks": 52,
-        "trajectories": "1.2M",
-        "tags": [
-            "Manipulation",
-            "RL",
-            "Simulation",
-            "Real-World"
-        ],
-        "cover": "/images/dataset1.jpg",
+        "trajectories": "120K",
+        "tags": ["Manipulation", "RL", "Real-World"],
         "robot": "Franka Emika Panda",
-        "format": "HDF5 / RLDS",
-        "license": "CC BY 4.0"
+        "format": "LeRobot",
+        "license": "Apache 2.0"
     },
     {
         "id": "dataset-002",
-        "name": "BimanualNav Dataset",
-        "description": "Bimanual robot navigation and object interaction dataset with language annotations, designed for embodied AI research and language-conditioned policies.",
-        "size": "128 GB",
+        "name": "EvoRL-UR5-Assembly",
+        "description": "Real-robot assembly dataset collected with UR5e using Evo-RL. Includes precision insertion, screw fastening, and peg-in-hole tasks with force-torque data.",
+        "size": "86 GB",
         "tasks": 28,
-        "trajectories": "420K",
-        "tags": [
-            "Navigation",
-            "Bimanual",
-            "Language-Conditioned",
-            "Embodied AI"
-        ],
-        "cover": "/images/dataset2.jpg",
-        "robot": "UR5e Dual-Arm",
-        "format": "JSON / MP4",
-        "license": "CC BY-NC 4.0"
+        "trajectories": "64K",
+        "tags": ["Manipulation", "Assembly", "Real-World"],
+        "robot": "UR5e",
+        "format": "LeRobot",
+        "license": "Apache 2.0"
     },
     {
         "id": "dataset-003",
-        "name": "SimToReal Transfer Benchmark",
-        "description": "Benchmark dataset for sim-to-real transfer research, featuring paired simulation and real-world data with domain randomization annotations.",
-        "size": "89 GB",
+        "name": "EvoRL-Mobile-Navigation",
+        "description": "Indoor navigation dataset for mobile manipulation platforms. Collected with Evo-RL in real office and lab environments with dynamic obstacles.",
+        "size": "54 GB",
         "tasks": 15,
-        "trajectories": "200K",
-        "tags": [
-            "Sim-to-Real",
-            "Benchmark",
-            "Domain Randomization"
-        ],
-        "cover": "/images/dataset3.jpg",
-        "robot": "Boston Dynamics Spot",
-        "format": "ROS Bag / RLDS",
-        "license": "MIT"
+        "trajectories": "32K",
+        "tags": ["Navigation", "Mobile", "Real-World"],
+        "robot": "Fetch Robot",
+        "format": "LeRobot",
+        "license": "Apache 2.0"
     },
     {
         "id": "dataset-004",
-        "name": "DexHand Grasp Collection",
-        "description": "High-resolution dexterous hand grasping dataset with tactile sensor readings, force data, and multi-view RGB-D streams for fine-grained manipulation.",
-        "size": "215 GB",
+        "name": "EvoRL-Dexterous-Hand",
+        "description": "Dexterous grasping and in-hand manipulation dataset collected via Evo-RL with multi-fingered hand. Includes tactile sensor readings and RGB-D streams.",
+        "size": "97 GB",
         "tasks": 35,
-        "trajectories": "680K",
-        "tags": [
-            "Dexterous",
-            "Grasping",
-            "Tactile",
-            "RGB-D"
-        ],
-        "cover": "/images/dataset4.jpg",
-        "robot": "Shadow Dexterous Hand",
-        "format": "HDF5",
-        "license": "CC BY 4.0"
+        "trajectories": "48K",
+        "tags": ["Dexterous", "Manipulation", "Real-World"],
+        "robot": "Inspire Dexterous Hand",
+        "format": "LeRobot",
+        "license": "Apache 2.0"
     },
     {
         "id": "dataset-005",
-        "name": "LocoMotion-500K",
-        "description": "Legged robot locomotion dataset covering diverse terrains and gaits. Includes IMU, joint state, and vision data for learning robust locomotion policies.",
-        "size": "176 GB",
+        "name": "EvoRL-Quadruped-Loco",
+        "description": "Legged locomotion dataset for quadruped robots trained with Evo-RL across diverse terrains including stairs, slopes, and unstructured outdoor environments.",
+        "size": "76 GB",
         "tasks": 20,
-        "trajectories": "500K",
-        "tags": [
-            "Locomotion",
-            "Legged Robot",
-            "Terrain",
-            "RL"
-        ],
-        "cover": "/images/dataset5.jpg",
-        "robot": "Unitree A1 / Go2",
-        "format": "ROS Bag / RLDS",
+        "trajectories": "80K",
+        "tags": ["Locomotion", "RL", "Real-World"],
+        "robot": "Unitree Go2",
+        "format": "LeRobot",
         "license": "Apache 2.0"
     },
     {
         "id": "dataset-006",
-        "name": "Humanoid Whole-Body Dataset",
-        "description": "Whole-body motion dataset for humanoid robots, featuring teleoperated demonstrations with retargeting from human motion capture data.",
-        "size": "412 GB",
-        "tasks": 60,
-        "trajectories": "1.5M",
-        "tags": [
-            "Humanoid",
-            "Whole-Body",
-            "Teleoperation",
-            "MoCap"
-        ],
-        "cover": "/images/dataset6.jpg",
-        "robot": "Unitree H1 / G1",
-        "format": "HDF5 / RLDS",
-        "license": "CC BY 4.0"
+        "name": "EvoRL-Humanoid-Whole-Body",
+        "description": "Whole-body control dataset for humanoid robots using Evo-RL. Features loco-manipulation tasks combining locomotion with upper-body manipulation.",
+        "size": "215 GB",
+        "tasks": 40,
+        "trajectories": "96K",
+        "tags": ["Humanoid", "Manipulation", "Real-World"],
+        "robot": "Unitree H1",
+        "format": "LeRobot",
+        "license": "Apache 2.0"
     }
 ]

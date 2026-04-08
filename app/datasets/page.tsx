@@ -24,7 +24,8 @@ export default function DatasetsPage() {
         });
     }, [search, activeTag]);
 
-    const allRawTags = ['manipulation', 'navigation', 'locomotion', 'dexterous', 'sim2real', 'humanoid', 'multimodal', 'real'];
+    // Tags must match values in datasets.json exactly (case-sensitive)
+    const allRawTags = ['Manipulation', 'Navigation', 'Locomotion', 'Dexterous', 'Humanoid', 'Assembly', 'Mobile', 'RL', 'Real-World'];
 
     return (
         <div className="pt-16 bg-[#0B0F19] min-h-screen">
