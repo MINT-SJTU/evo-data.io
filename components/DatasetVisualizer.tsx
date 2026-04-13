@@ -11,12 +11,13 @@
  *  6. Interactive multi-series Recharts grouped by semantic dimension type
  */
 
-import { useCallback, useEffect, useRef, useState, memo } from 'react';
+import { useCallback, useEffect, useRef, useState, memo, forwardRef } from 'react';
 import {
     CartesianGrid,
     Legend,
     Line,
     LineChart,
+    ReferenceLine,
     ResponsiveContainer,
     Tooltip,
     XAxis,
@@ -153,13 +154,12 @@ async function cachedParquet(url: string): Promise<any[]> {
 }
 
 // ─── ClippedVideo ─────────────────────────────────────────────────────────────
-// For v3 datasets multiple episodes share one mp4 file.
-// Strategy: hidden <video> + visible <canvas> rendered via requestAnimationFrame.
-//   • The hidden video is seeked to startSec on load, then plays freely.
-//   • rAF copies each frame to the canvas — the canvas shows exactly what the video is at.
-//   • timeupdate loops the video back to startSec when it reaches endSec.
-//   • A custom progress bar beneath shows 0→(endSec-startSec).
-// For un-clipped (v2) videos, we just render a normal <video> element.
+// Unified video player for both v2 and v3 using native <video> element for
+// GPU-accelerated rendering (no canvas overhead).
+//   • v3 (hasClip): plays within [startSec, endSec] then fires onEnded.
+//   • v2 (no clip): plays full video then fires onEnded.
+//   • Controlled externally: isPlaying / onRestart props.
+//   • onReady: called once first seek completes (for multi-video sync gate).
 
 interface ClippedVideoProps {
     src: string;
@@ -168,181 +168,176 @@ interface ClippedVideoProps {
     /** End time in seconds within the file. undefined = play to end. */
     endSec?: number;
     label?: string;
-    /** Called once the video is ready to play (seeked to startSec if clipped) */
+    /** Called once the video is seeked to start and ready to play */
     onReady?: () => void;
-    playing?: boolean;
+    /** External play/pause control */
+    isPlaying: boolean;
+    /** Called when video naturally reaches the end */
+    onEnded?: () => void;
+    /** Called every timeupdate with elapsed seconds within clip (0-based) */
+    onProgress?: (elapsedSec: number) => void;
+    /** Imperative restart trigger: increment to restart */
+    restartSignal?: number;
 }
 
-function ClippedVideo({ src, startSec, endSec, label, onReady, playing = true }: ClippedVideoProps) {
+const ClippedVideo = forwardRef<HTMLVideoElement, ClippedVideoProps>(function ClippedVideo({
+    src, startSec, endSec, label, onReady, isPlaying, onEnded, onProgress, restartSignal = 0,
+}, ref) {
     const videoRef = useRef<HTMLVideoElement>(null);
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const rafRef = useRef<number>(0);
+    // Merge external ref with internal ref
+    const setVideoRef = useCallback((el: HTMLVideoElement | null) => {
+        (videoRef as React.MutableRefObject<HTMLVideoElement | null>).current = el;
+        if (typeof ref === 'function') ref(el);
+        else if (ref) (ref as React.MutableRefObject<HTMLVideoElement | null>).current = el;
+    }, [ref]);
     const onReadyRef = useRef(onReady);
     useEffect(() => { onReadyRef.current = onReady; }, [onReady]);
+    const onEndedRef = useRef(onEnded);
+    useEffect(() => { onEndedRef.current = onEnded; }, [onEnded]);
+    const onProgressRef = useRef(onProgress);
+    useEffect(() => { onProgressRef.current = onProgress; }, [onProgress]);
 
     const hasClip = startSec !== undefined && endSec !== undefined;
-    const clipDuration = hasClip ? endSec! - startSec! : 0;
+    const clipStart = hasClip ? startSec! : 0;
+    const clipEnd = endSec;
+    const clipDuration = hasClip ? endSec! - startSec! : null;
 
-    // ── Load / reload when src or clip changes ────────────────────────────
+    // ── Load / reload on src change ───────────────────────────────────────
     useEffect(() => {
         const vid = videoRef.current;
         if (!vid) return;
-
-        cancelAnimationFrame(rafRef.current);
         vid.pause();
         vid.src = src;
         vid.load();
-
-        const onMeta = () => {
-            vid.currentTime = hasClip ? startSec! : 0;
-        };
-
-        const onSeeked = () => {
-            onReadyRef.current?.();
-        };
-
-        const onCanPlay = () => {
-            if (!hasClip) onReadyRef.current?.();
-        };
-
-        // Loop within clip
-        const onTimeUpdate = () => {
-            if (hasClip && vid.currentTime >= endSec!) {
-                vid.currentTime = startSec!;
-            }
-        };
-
+        const onMeta = () => { vid.currentTime = clipStart; };
+        const onSeeked = () => { onReadyRef.current?.(); };
         vid.addEventListener('loadedmetadata', onMeta);
         vid.addEventListener('seeked', onSeeked);
-        vid.addEventListener('canplay', onCanPlay);
-        vid.addEventListener('timeupdate', onTimeUpdate);
         return () => {
             vid.removeEventListener('loadedmetadata', onMeta);
             vid.removeEventListener('seeked', onSeeked);
-            vid.removeEventListener('canplay', onCanPlay);
-            vid.removeEventListener('timeupdate', onTimeUpdate);
-            cancelAnimationFrame(rafRef.current);
         };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [src, startSec, endSec, hasClip]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [src]);
 
-    // ── Canvas paint loop ─────────────────────────────────────────────────
+    // ── Clip-end detection & progress reporting ───────────────────────────
     useEffect(() => {
-        if (!hasClip) return; // v2: plain <video> renders itself
         const vid = videoRef.current;
-        const canvas = canvasRef.current;
-        if (!vid || !canvas) return;
-
-        let running = true;
-        const paint = () => {
-            if (!running) return;
-            if (canvas.width !== vid.videoWidth && vid.videoWidth > 0) {
-                canvas.width = vid.videoWidth;
-                canvas.height = vid.videoHeight;
+        if (!vid) return;
+        const onTimeUpdate = () => {
+            // v3: stop at clipEnd
+            if (hasClip && clipEnd !== undefined && vid.currentTime >= clipEnd) {
+                vid.pause();
+                vid.currentTime = clipEnd;
+                onEndedRef.current?.();
             }
-            if (vid.videoWidth > 0) {
-                const ctx = canvas.getContext('2d');
-                ctx?.drawImage(vid, 0, 0, canvas.width, canvas.height);
-            }
-            rafRef.current = requestAnimationFrame(paint);
+            // Report progress
+            const elapsed = Math.max(0, vid.currentTime - clipStart);
+            onProgressRef.current?.(elapsed);
         };
-        rafRef.current = requestAnimationFrame(paint);
+        const onNativeEnded = () => { onEndedRef.current?.(); };
+        vid.addEventListener('timeupdate', onTimeUpdate);
+        vid.addEventListener('ended', onNativeEnded);
         return () => {
-            running = false;
-            cancelAnimationFrame(rafRef.current);
+            vid.removeEventListener('timeupdate', onTimeUpdate);
+            vid.removeEventListener('ended', onNativeEnded);
         };
-    }, [hasClip]);
+    }, [hasClip, clipEnd, clipStart]);
 
-    // ── Play / pause ──────────────────────────────────────────────────────
+    // ── External play/pause ───────────────────────────────────────────────
     useEffect(() => {
         const vid = videoRef.current;
         if (!vid) return;
-        if (playing) {
-            vid.play().catch(() => {});
-        } else {
-            vid.pause();
+        if (isPlaying) { vid.play().catch(() => { }); }
+        else { vid.pause(); }
+    }, [isPlaying]);
+
+    // ── Restart signal ────────────────────────────────────────────────────
+    const prevRestartRef = useRef(restartSignal);
+    useEffect(() => {
+        if (restartSignal !== prevRestartRef.current) {
+            prevRestartRef.current = restartSignal;
+            const vid = videoRef.current;
+            if (!vid) return;
+            vid.currentTime = clipStart;
+            vid.play().catch(() => { });
         }
-    }, [playing]);
-
-    // ── Progress state for custom progress bar ────────────────────────────
-    const [progress, setProgress] = useState(0); // 0–1
-    useEffect(() => {
-        if (!hasClip) return;
-        const vid = videoRef.current;
-        if (!vid) return;
-        const onTime = () => {
-            const elapsed = Math.max(0, vid.currentTime - startSec!);
-            setProgress(clipDuration > 0 ? elapsed / clipDuration : 0);
-        };
-        vid.addEventListener('timeupdate', onTime);
-        return () => vid.removeEventListener('timeupdate', onTime);
-    }, [hasClip, startSec, clipDuration]);
+    }, [restartSignal, clipStart]);
 
     return (
-        <div className="rounded-xl overflow-hidden border border-slate-200 bg-slate-900">
+        <div className="rounded-xl overflow-hidden border border-slate-700 bg-slate-900">
             {label && (
                 <div className="px-2 py-1.5 bg-slate-800 border-b border-slate-700">
                     <span className="text-xs font-mono text-slate-400 truncate block">{label}</span>
                 </div>
             )}
+            <video
+                ref={setVideoRef}
+                muted
+                playsInline
+                preload="auto"
+                className="w-full block bg-black"
+                style={{ aspectRatio: '16/9', objectFit: 'contain' }}
+            />
+        </div>
+    );
+});
 
-            {hasClip ? (
-                /* Clipped: canvas shows the frames, hidden video drives it */
-                <>
-                    {/* Hidden driver video */}
-                    <video
-                        ref={videoRef}
-                        muted
-                        playsInline
-                        style={{ display: 'none' }}
-                    />
-                    {/* Visible canvas */}
-                    <canvas
-                        ref={canvasRef}
-                        className="w-full block bg-black"
-                        style={{ aspectRatio: '16/9' }}
-                    />
-                    {/* Custom progress bar */}
-                    <div className="px-3 py-2 bg-slate-800 flex items-center gap-2">
-                        <span className="text-xs font-mono text-slate-400 w-10 shrink-0">
-                            {Math.round(progress * clipDuration)}s
-                        </span>
-                        <div
-                            className="flex-1 h-1.5 bg-slate-600 rounded-full overflow-hidden cursor-pointer"
-                            onClick={(e) => {
-                                const vid = videoRef.current;
-                                if (!vid) return;
-                                const rect = e.currentTarget.getBoundingClientRect();
-                                const frac = (e.clientX - rect.left) / rect.width;
-                                vid.currentTime = startSec! + frac * clipDuration;
-                            }}
-                        >
-                            <div
-                                className="h-full bg-indigo-400 rounded-full transition-none"
-                                style={{ width: `${progress * 100}%` }}
-                            />
-                        </div>
-                        <span className="text-xs font-mono text-slate-400 w-10 shrink-0 text-right">
-                            {clipDuration.toFixed(1)}s
-                        </span>
-                    </div>
-                </>
-            ) : (
-                /* Un-clipped (v2): normal video element with browser controls */
-                <video
-                    ref={videoRef}
-                    muted
-                    playsInline
-                    controls
-                    className="w-full"
-                    style={{ display: 'block' }}
-                />
-            )}
+// ─── VideoControls ────────────────────────────────────────────────────────────
+// Shared control bar for a group of ClippedVideo instances.
+
+interface VideoControlsProps {
+    isPlaying: boolean;
+    ended: boolean;
+    progress: number;        // 0–1
+    currentSec: number;
+    totalSec: number | null;
+    onPlayPause: () => void;
+    onRestart: () => void;
+    onSeek: (frac: number) => void;
+}
+
+function VideoControls({ isPlaying, ended, progress, currentSec, totalSec, onPlayPause, onRestart, onSeek }: VideoControlsProps) {
+    return (
+        <div className="px-3 py-2 bg-slate-800 rounded-b-xl flex items-center gap-2 mt-0">
+            {/* Restart */}
+            <button onClick={onRestart} className="shrink-0 text-slate-400 hover:text-white transition-colors" title="从头播放">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                    <path d="M7.712 3.712a.75.75 0 0 1 .788.712V9.25l5.638-3.965A.75.75 0 0 1 15.25 6v8a.75.75 0 0 1-1.112.656L8.5 10.749v4.539a.75.75 0 0 1-1.5 0v-11a.75.75 0 0 1 .712-.576ZM4.75 4a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-1.5 0V4.75A.75.75 0 0 1 4.75 4Z" />
+                </svg>
+            </button>
+            {/* Play / Pause */}
+            <button onClick={onPlayPause} className="shrink-0 text-slate-400 hover:text-white transition-colors" title={isPlaying ? '暂停' : ended ? '重新播放' : '播放'}>
+                {isPlaying ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                        <path d="M5.75 3a.75.75 0 0 0-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 0 0 .75-.75V3.75A.75.75 0 0 0 7.25 3h-1.5ZM12.75 3a.75.75 0 0 0-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 0 0 .75-.75V3.75a.75.75 0 0 0-.75-.75h-1.5Z" />
+                    </svg>
+                ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                        <path d="M6.3 2.84A1.5 1.5 0 0 0 4 4.11v11.78a1.5 1.5 0 0 0 2.3 1.27l9.344-5.891a1.5 1.5 0 0 0 0-2.538L6.3 2.84Z" />
+                    </svg>
+                )}
+            </button>
+            {/* Current time */}
+            <span className="text-xs font-mono text-slate-400 shrink-0 w-10">{currentSec.toFixed(1)}s</span>
+            {/* Progress bar */}
+            <div
+                className="flex-1 h-1.5 bg-slate-600 rounded-full overflow-hidden cursor-pointer"
+                onClick={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    onSeek(Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)));
+                }}
+            >
+                <div className="h-full bg-indigo-400 rounded-full" style={{ width: `${progress * 100}%`, transition: 'none' }} />
+            </div>
+            {/* Total time */}
+            <span className="text-xs font-mono text-slate-400 shrink-0 w-10 text-right">
+                {totalSec !== null ? `${totalSec.toFixed(1)}s` : '--'}
+            </span>
         </div>
     );
 }
 
-// ─── Chart Panel ──────────────────────────────────────────────────────────────
 
 interface ChartPanelProps {
     title: string;
@@ -351,10 +346,12 @@ interface ChartPanelProps {
     labels: string[];
     colorOffset?: number;
     syncId?: string;
+    /** Current playback frame to show as a reference line */
+    playFrame?: number | null;
 }
 
 const ChartPanel = memo(function ChartPanel({
-    title, data, seriesKeys, labels, colorOffset = 0, syncId,
+    title, data, seriesKeys, labels, colorOffset = 0, syncId, playFrame,
 }: ChartPanelProps) {
     return (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
@@ -404,6 +401,16 @@ const ChartPanel = memo(function ChartPanel({
                         iconSize={12}
                         wrapperStyle={{ fontSize: '10px', paddingTop: 8 }}
                     />
+                    {playFrame != null && (
+                        <ReferenceLine
+                            x={playFrame}
+                            stroke="#f97316"
+                            strokeWidth={1.5}
+                            strokeDasharray="4 3"
+                            strokeOpacity={0.85}
+                            ifOverflow="hidden"
+                        />
+                    )}
                     {seriesKeys.map((k, i) => (
                         <Line
                             key={k}
@@ -445,6 +452,90 @@ export default function DatasetVisualizer({ hfId, totalEpisodes }: Props) {
     // Multi-video sync: wait for all videos to be ready before starting playback
     const [videosReady, setVideosReady] = useState(0);
     const allVideosReady = videoUrls.length > 0 && videosReady >= videoUrls.length;
+
+    // ── Shared video playback state (controls all videos in sync) ────────
+    const [vidPlaying, setVidPlaying] = useState(false);
+    const [vidEnded, setVidEnded] = useState(false);
+    const [restartSignal, setRestartSignal] = useState(0);
+
+    // Progress state driven by first video's onProgress
+    const [vidProgress, setVidProgress] = useState(0);       // 0–1
+    const [vidCurrentSec, setVidCurrentSec] = useState(0);
+    const [vidTotalSec, setVidTotalSec] = useState<number | null>(null);
+
+    // Chart frame indicator (driven by video progress)
+    const [playingFrame, setPlayingFrame] = useState<number | null>(null);
+
+    // Ref to first video element for seek-on-progress-bar-click
+    const firstVideoRef = useRef<HTMLVideoElement | null>(null);
+
+    // When all videos become ready, auto-start
+    const prevAllReadyRef = useRef(false);
+    useEffect(() => {
+        if (allVideosReady && !prevAllReadyRef.current) {
+            prevAllReadyRef.current = true;
+            setVidPlaying(true);
+            setVidEnded(false);
+        }
+    }, [allVideosReady]);
+
+    // Reset on episode change
+    useEffect(() => {
+        prevAllReadyRef.current = false;
+        setVidPlaying(false);
+        setVidEnded(false);
+        setVidProgress(0);
+        setVidCurrentSec(0);
+        setVidTotalSec(null);
+    }, [videoUrls]);
+
+    // Shared controls handlers
+    const handleVidPlayPause = useCallback(() => {
+        if (vidEnded) {
+            setVidEnded(false);
+            setRestartSignal((s) => s + 1);
+            setVidPlaying(true);
+        } else {
+            setVidPlaying((p) => !p);
+        }
+    }, [vidEnded]);
+
+    const handleVidRestart = useCallback(() => {
+        setVidEnded(false);
+        setRestartSignal((s) => s + 1);
+        setVidPlaying(true);
+    }, []);
+
+    const handleVidSeek = useCallback((frac: number) => {
+        const vid = firstVideoRef.current;
+        if (!vid) return;
+        const clipStart = videoClip?.startSec ?? 0;
+        const dur = videoClip
+            ? videoClip.endSec - videoClip.startSec
+            : (isFinite(vid.duration) ? vid.duration : 0);
+        vid.currentTime = clipStart + frac * dur;
+        if (vidEnded) { setVidEnded(false); setVidPlaying(true); }
+    }, [videoClip, vidEnded]);
+
+    // Progress callback from first video
+    const handleVideoProgress = useCallback((elapsedSec: number) => {
+        const vid = firstVideoRef.current;
+        const dur = videoClip
+            ? videoClip.endSec - videoClip.startSec
+            : vid && isFinite(vid.duration) ? vid.duration : null;
+        setVidCurrentSec(elapsedSec);
+        if (dur && dur > 0) setVidProgress(elapsedSec / dur);
+        if (dur) setVidTotalSec(dur);
+
+        // Also update chart frame indicator
+        if (!info) return;
+        if (videoClip && rows.length > 0) {
+            const firstFrame = rows[0].frame_index;
+            setPlayingFrame(firstFrame + Math.round(elapsedSec * info.fps));
+        } else {
+            setPlayingFrame(Math.round(elapsedSec * info.fps));
+        }
+    }, [info, videoClip, rows]);
 
     // ── Load info.json once when panel opens ──────────────────────────────
     useEffect(() => {
@@ -797,15 +888,30 @@ export default function DatasetVisualizer({ hfId, totalEpisodes }: Props) {
                                         {videoUrls.map((url, i) => (
                                             <ClippedVideo
                                                 key={url}
+                                                ref={i === 0 ? firstVideoRef : undefined}
                                                 src={url}
                                                 startSec={videoClip?.startSec}
                                                 endSec={videoClip?.endSec}
                                                 label={videoKeys[i]?.split('.').pop() ?? videoKeys[i]}
                                                 onReady={() => setVideosReady((n) => n + 1)}
-                                                playing={allVideosReady}
+                                                isPlaying={vidPlaying}
+                                                onEnded={i === 0 ? () => { setVidPlaying(false); setVidEnded(true); } : undefined}
+                                                onProgress={i === 0 ? handleVideoProgress : undefined}
+                                                restartSignal={restartSignal}
                                             />
                                         ))}
                                     </div>
+                                    {/* Shared video controls below the grid */}
+                                    <VideoControls
+                                        isPlaying={vidPlaying}
+                                        ended={vidEnded}
+                                        progress={vidProgress}
+                                        currentSec={vidCurrentSec}
+                                        totalSec={vidTotalSec}
+                                        onPlayPause={handleVidPlayPause}
+                                        onRestart={handleVidRestart}
+                                        onSeek={handleVidSeek}
+                                    />
                                 </div>
                             )}
 
@@ -870,6 +976,7 @@ export default function DatasetVisualizer({ hfId, totalEpisodes }: Props) {
                                                                         labels={ag.labels}
                                                                         colorOffset={colorOffset}
                                                                         syncId={hfId}
+                                                                        playFrame={playingFrame}
                                                                     />
                                                                 </div>
                                                                 <div>
@@ -881,6 +988,7 @@ export default function DatasetVisualizer({ hfId, totalEpisodes }: Props) {
                                                                         labels={sg.labels}
                                                                         colorOffset={colorOffset}
                                                                         syncId={hfId}
+                                                                        playFrame={playingFrame}
                                                                     />
                                                                 </div>
                                                             </div>
@@ -895,6 +1003,7 @@ export default function DatasetVisualizer({ hfId, totalEpisodes }: Props) {
                                                                         labels={ag.labels}
                                                                         colorOffset={colorOffset}
                                                                         syncId={hfId}
+                                                                        playFrame={playingFrame}
                                                                     />
                                                                 </div>
                                                             </div>
@@ -909,6 +1018,7 @@ export default function DatasetVisualizer({ hfId, totalEpisodes }: Props) {
                                                                         labels={sg.labels}
                                                                         colorOffset={colorOffset}
                                                                         syncId={hfId}
+                                                                        playFrame={playingFrame}
                                                                     />
                                                                 </div>
                                                             </div>
@@ -927,6 +1037,7 @@ export default function DatasetVisualizer({ hfId, totalEpisodes }: Props) {
                                                 labels={scalarKeys}
                                                 colorOffset={cursor}
                                                 syncId={hfId}
+                                                playFrame={playingFrame}
                                             />
                                         )}
                                     </div>
