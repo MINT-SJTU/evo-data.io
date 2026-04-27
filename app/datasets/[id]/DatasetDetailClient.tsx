@@ -196,7 +196,22 @@ export default function DatasetDetailClient({ dataset }: Props) {
                         <h2 className="text-xl font-bold text-slate-800 mb-6">{t.relatedTitle}</h2>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {relatedDatasets.map((d, i) => (
-                                <DatasetCard key={d.id} dataset={d} index={i} />
+                                <DatasetCard key={d.id} dataset={{
+                                    id: d.id,
+                                    name: d.name,
+                                    description: d.description ?? null,
+                                    tags: Array.isArray(d.tags) ? d.tags.join(',') : (d.tags ?? null),
+                                    is_public: true,
+                                    version: '1.0',
+                                    total_episodes: typeof d.tasks === 'number' ? d.tasks : null,
+                                    total_frames: null,
+                                    size_bytes: null,
+                                    robot: d.robot ?? null,
+                                    license: d.license ?? 'Unknown',
+                                    has_preview: false,
+                                    created_at: '',
+                                    owner_phone: null,
+                                }} index={i} />
                             ))}
                         </div>
                     </div>
