@@ -2,12 +2,16 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowLeft, Download, AlertTriangle, Database } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { ArrowLeft, Download, AlertTriangle, Database, Loader2, Lock } from 'lucide-react';
 import datasetsJson from '@/data/datasets.json';
 import DatasetCard from '@/components/DatasetCard';
 import DatasetVisualizer from '@/components/DatasetVisualizer';
 import { useLang } from '@/lib/LangContext';
 import { detailT } from '@/lib/i18n';
+import { useAuth } from '@/lib/AuthContext';
+import { getDownloadUrl } from '@/lib/api';
 
 type Dataset = {
     id: string;
@@ -40,10 +44,32 @@ const tagColorMap: Record<string, string> = {
 export default function DatasetDetailClient({ dataset }: Props) {
     const { lang } = useLang();
     const t = detailT[lang];
+    const { user } = useAuth();
+    const router = useRouter();
+    const [downloading, setDownloading] = useState(false);
+    const [downloadError, setDownloadError] = useState('');
 
     const relatedDatasets = (datasetsJson as Dataset[])
         .filter((d) => d.id !== dataset.id && d.tags.some((tag) => dataset.tags.includes(tag)))
         .slice(0, 3);
+
+    const handleDownload = async () => {
+        if (!user) {
+            router.push('/auth?next=/datasets/' + dataset.id);
+            return;
+        }
+        setDownloading(true);
+        setDownloadError('');
+        try {
+            // 下载整个数据集的 meta/info.json 作为入口（实际可做批量签名）
+            const { url } = await getDownloadUrl(dataset.id, 'meta/info.json');
+            window.open(url, '_blank');
+        } catch (e: unknown) {
+            setDownloadError((e as Error).message || '获取下载链接失败');
+        } finally {
+            setDownloading(false);
+        }
+    };
 
     const infoRows = [
         { label: t.labels.Size, value: dataset.size },
@@ -114,13 +140,32 @@ export default function DatasetDetailClient({ dataset }: Props) {
                                     ))}
                                 </dl>
                             </div>
-                            <button
-                                disabled
-                                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-indigo-100 text-indigo-400 font-semibold text-sm cursor-not-allowed border border-indigo-200"
-                            >
-                                <Download className="w-4 h-4" />
-                                {t.downloadBtn}
-                            </button>
+
+                            {downloadError && (
+                                <p className="text-xs text-red-500 mb-3 px-1">{downloadError}</p>
+                            )}
+
+                            {user ? (
+                                <button
+                                    onClick={handleDownload}
+                                    disabled={downloading}
+                                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 disabled:opacity-60 transition border border-indigo-600"
+                                >
+                                    {downloading
+                                        ? <Loader2 className="w-4 h-4 animate-spin" />
+                                        : <Download className="w-4 h-4" />
+                                    }
+                                    {t.downloadBtn}
+                                </button>
+                            ) : (
+                                <Link
+                                    href={`/auth?next=/datasets/${dataset.id}`}
+                                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-100 text-slate-500 font-semibold text-sm hover:bg-indigo-50 hover:text-indigo-600 transition border border-slate-200"
+                                >
+                                    <Lock className="w-4 h-4" />
+                                    登录后下载
+                                </Link>
+                            )}
                         </motion.div>
                     </div>
                 </div>

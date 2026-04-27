@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, SlidersHorizontal } from 'lucide-react';
-import datasetsJson from '@/data/datasets.json';
+import { Loader2, Search } from 'lucide-react';
+import { listDatasets, DatasetListItem } from '@/lib/api';
 import DatasetCard from '@/components/DatasetCard';
 import { useLang } from '@/lib/LangContext';
 import { datasetsT } from '@/lib/i18n';
@@ -12,19 +12,28 @@ export default function DatasetsPage() {
     const { lang } = useLang();
     const t = datasetsT[lang];
 
+    const [datasets, setDatasets] = useState<DatasetListItem[]>([]);
+    const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [activeTag, setActiveTag] = useState('');
 
+    useEffect(() => {
+        listDatasets().then(setDatasets).catch(console.error).finally(() => setLoading(false));
+    }, []);
+
     const filtered = useMemo(() => {
         const q = search.toLowerCase();
-        return datasetsJson.filter((d) => {
-            const matchSearch = !q || d.name.toLowerCase().includes(q) || d.description.toLowerCase().includes(q);
-            const matchTag = !activeTag || d.tags.includes(activeTag);
+        return datasets.filter((d) => {
+            const matchSearch = !q || d.name.toLowerCase().includes(q) || (d.description ?? '').toLowerCase().includes(q);
+            const matchTag = !activeTag || (d.tags ?? '').includes(activeTag);
             return matchSearch && matchTag;
         });
-    }, [search, activeTag]);
+    }, [search, activeTag, datasets]);
 
-    const allRawTags = ['Manipulation', 'Navigation', 'Locomotion', 'Dexterous', 'Humanoid', 'Assembly', 'Mobile', 'RL', 'Real-World'];
+    const robotTags = ['SO101', 'SO100', 'Piper', 'AgiBot', 'UR5', 'UR10', 'Franka', 'xArm', 'Dobot', 'Realman'];
+    const taskTags = ['家居操作', '工业装配', '物品抓取', '物品摆放', '开关柜门', '食品处理', '医疗辅助', '仓储物流', '双臂协作'];
+    const allRawTags = [...robotTags, ...taskTags];
+
 
     return (
         <div className="pt-16 bg-slate-50 min-h-screen">
@@ -49,8 +58,9 @@ export default function DatasetsPage() {
 
             {/* Filter bar */}
             <section className="sticky top-16 z-30 bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-sm px-6 md:px-12 lg:px-20 py-3.5">
-                <div className="max-w-6xl mx-auto flex flex-col sm:flex-row gap-3">
-                    <div className="relative flex-1">
+                <div className="max-w-6xl mx-auto flex flex-col gap-3">
+                    {/* 搜索框 */}
+                    <div className="relative">
                         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                         <input
                             value={search}
@@ -59,26 +69,37 @@ export default function DatasetsPage() {
                             className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-10 pr-4 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition"
                         />
                     </div>
+                    {/* 机械臂类型 */}
                     <div className="flex items-center gap-2 flex-wrap">
-                        <SlidersHorizontal className="w-4 h-4 text-slate-400 shrink-0" />
+                        <span className="text-xs text-slate-400 font-medium shrink-0">机械臂</span>
                         <button
                             onClick={() => setActiveTag('')}
                             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition border ${!activeTag ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-200 text-slate-500 hover:border-indigo-300 hover:text-indigo-600'}`}
                         >
-                            {t.allLabel}
+                            全部
                         </button>
-                        {allRawTags.map((rawTag, i) => {
-                            const label = t.tags[i] ?? rawTag;
-                            return (
-                                <button
-                                    key={rawTag}
-                                    onClick={() => setActiveTag(rawTag === activeTag ? '' : rawTag)}
-                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition border ${activeTag === rawTag ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-200 text-slate-500 hover:border-indigo-300 hover:text-indigo-600'}`}
-                                >
-                                    {label}
-                                </button>
-                            );
-                        })}
+                        {robotTags.map((tag) => (
+                            <button
+                                key={tag}
+                                onClick={() => setActiveTag(tag === activeTag ? '' : tag)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition border ${activeTag === tag ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-200 text-slate-500 hover:border-indigo-300 hover:text-indigo-600'}`}
+                            >
+                                {tag}
+                            </button>
+                        ))}
+                    </div>
+                    {/* 任务类型 */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs text-slate-400 font-medium shrink-0">任务</span>
+                        {taskTags.map((tag) => (
+                            <button
+                                key={tag}
+                                onClick={() => setActiveTag(tag === activeTag ? '' : tag)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition border ${activeTag === tag ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-white border-slate-200 text-slate-500 hover:border-emerald-300 hover:text-emerald-600'}`}
+                            >
+                                {tag}
+                            </button>
+                        ))}
                     </div>
                 </div>
             </section>
@@ -86,25 +107,33 @@ export default function DatasetsPage() {
             {/* Grid */}
             <section className="px-6 md:px-12 lg:px-20 py-10">
                 <div className="max-w-6xl mx-auto">
-                    <p className="text-sm text-slate-400 mb-6">{filtered.length} {t.found}</p>
-                    {filtered.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {filtered.map((dataset, i) => (
-                                <DatasetCard key={dataset.id} dataset={dataset} index={i} />
-                            ))}
+                    {loading ? (
+                        <div className="flex justify-center items-center py-24">
+                            <Loader2 className="w-8 h-8 animate-spin text-indigo-400" />
                         </div>
                     ) : (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-24">
-                            <p className="text-4xl mb-4">🔍</p>
-                            <p className="text-slate-500">{t.noResults}</p>
-                            <p className="text-sm text-slate-400 mt-1">{t.noResultsHint}</p>
-                            <button
-                                onClick={() => { setSearch(''); setActiveTag(''); }}
-                                className="mt-4 text-sm text-indigo-600 hover:underline"
-                            >
-                                {t.clearFilters}
-                            </button>
-                        </motion.div>
+                        <>
+                            <p className="text-sm text-slate-400 mb-6">{filtered.length} {t.found}</p>
+                            {filtered.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {filtered.map((dataset, i) => (
+                                        <DatasetCard key={dataset.id} dataset={dataset} index={i} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-24">
+                                    <p className="text-4xl mb-4">🔍</p>
+                                    <p className="text-slate-500">{t.noResults}</p>
+                                    <p className="text-sm text-slate-400 mt-1">{t.noResultsHint}</p>
+                                    <button
+                                        onClick={() => { setSearch(''); setActiveTag(''); }}
+                                        className="mt-4 text-sm text-indigo-600 hover:underline"
+                                    >
+                                        {t.clearFilters}
+                                    </button>
+                                </motion.div>
+                            )}
+                        </>
                     )}
                 </div>
             </section>

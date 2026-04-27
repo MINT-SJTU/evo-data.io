@@ -3,6 +3,7 @@ import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { LangProvider } from '@/lib/LangContext';
+import { AuthProvider } from '@/lib/AuthContext';
 
 export const metadata: Metadata = {
     title: 'EvoData — Real-Robot RL Data Platform',
@@ -30,9 +31,11 @@ export default function RootLayout({
         <html lang="en" className="scroll-smooth">
             <body className="bg-[#0B0F19] text-slate-200 antialiased">
                 <LangProvider>
-                    <Navbar />
-                    <main>{children}</main>
-                    <Footer />
+                    <AuthProvider>
+                        <Navbar />
+                        <main>{children}</main>
+                        <Footer />
+                    </AuthProvider>
                 </LangProvider>
             </body>
         </html>

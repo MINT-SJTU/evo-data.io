@@ -9,8 +9,6 @@ import {
 import Image from 'next/image';
 import Hero from '@/components/Hero';
 import FeatureCard from '@/components/FeatureCard';
-import DatasetCard from '@/components/DatasetCard';
-import datasets from '@/data/datasets.json';
 import { useLang } from '@/lib/LangContext';
 import { homeT } from '@/lib/i18n';
 
@@ -45,7 +43,6 @@ function SectionHeader({ badge, title, subtitle }: { badge: string; title: React
 export default function HomePage() {
     const { lang } = useLang();
     const t = homeT[lang];
-    const previewDatasets = datasets.slice(0, 3);
 
     const features = t.features.map((f, i) => ({
         ...f,
@@ -71,38 +68,6 @@ export default function HomePage() {
                             <FeatureCard key={i} icon={f.icon} title={f.title} description={f.description} gradient={f.gradient} index={i} />
                         ))}
                     </div>
-                </div>
-            </section>
-
-            {/* Dataset Preview */}
-            <section className="relative px-6 md:px-12 lg:px-20 py-24 md:py-32 overflow-hidden" style={{ background: 'linear-gradient(180deg, #0B0F19 0%, #0d1120 50%, #0B0F19 100%)' }}>
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-32 bg-gradient-to-b from-transparent via-indigo-500/40 to-transparent" />
-                <div className="max-w-7xl mx-auto">
-                    <SectionHeader
-                        badge={t.datasetsBadge}
-                        title={<>{t.datasetsTitle}<span className="gradient-text">{t.datasetsTitleHighlight}</span>{t.datasetsTitleSuffix}</>}
-                        subtitle={t.datasetsSubtitle}
-                    />
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {previewDatasets.map((ds, i) => (
-                            <DatasetCard key={ds.id} dataset={ds} index={i} />
-                        ))}
-                    </div>
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: 0.3 }}
-                        className="text-center mt-10"
-                    >
-                        <Link
-                            href="/datasets"
-                            className="group inline-flex items-center gap-2 px-7 py-3.5 bg-slate-800/60 hover:bg-slate-700/60 border border-slate-700/50 hover:border-indigo-500/40 text-slate-200 font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5"
-                        >
-                            {t.viewAll}
-                            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                        </Link>
-                    </motion.div>
                 </div>
             </section>
 
