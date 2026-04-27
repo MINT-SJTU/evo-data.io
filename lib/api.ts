@@ -100,10 +100,15 @@ export async function sendSms(
     });
 }
 
-export async function loginWithPassword(phone: string, password: string): Promise<TokenResponse> {
+export async function loginWithPassword(
+    phone: string,
+    password: string,
+    captcha_id: string,
+    captcha_text: string
+): Promise<TokenResponse> {
     return request<TokenResponse>("/auth/login/password", {
         method: "POST",
-        body: JSON.stringify({ phone, password }),
+        body: JSON.stringify({ phone, password, captcha_id, captcha_text }),
     });
 }
 
